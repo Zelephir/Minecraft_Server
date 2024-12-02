@@ -15,7 +15,8 @@ openjdk version "21.0.5" 2024-10-15
 OpenJDK Runtime Environment (build 21.0.5+11-Ubuntu-1ubuntu124.04)
 OpenJDK 64-Bit Server VM (build 21.0.5+11-Ubuntu-1ubuntu124.04, mixed mode, sharing)
  ```
-
+    
+    
 # Créer un dossier pour le serveur :
  ```
 lou@client3:~$ mkdir ~/minecraft-server && cd ~/minecraft-server
