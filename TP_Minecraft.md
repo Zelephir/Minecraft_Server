@@ -45,31 +45,6 @@ eula=true
  On peut utiliser & à la fin de la commande de lancement pour pouvoir mettre tourner le server en fond.
 
 ## On installe un mod (https://www.curseforge.com/minecraft/mc-mods/jei/download/5846810) et on le place dans le dossier du server
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
  # Automatiser le démarrage, Pour que le serveur se lance automatiquement au démarrage de la VM,
@@ -82,7 +57,7 @@ lou@client3:~/forge-server$ sudo nano /etc/systemd/system/minecraft.service
 ```
 
 # On ajoute ce contenu pour Minecraft Java Edition :
-
+```
 [Unit]
 Description=Minecraft Server
 After=network.target
@@ -97,7 +72,7 @@ LimitNOFILE=8192
 
 [Install]
 WantedBy=multi-user.target
-
+```
 
 # Activer et démarrer le service :
 
@@ -136,5 +111,68 @@ ps aux | grep minecraft
 sudo kill <PID>
 ```
 
+# Commandes simples pour gérer le serveur 
+```
+sudo systemctl start minecraft.service   # Démarrer
+sudo systemctl stop minecraft.service    # Arrêter
+sudo systemctl restart minecraft.service # Redémarrer
+sudo systemctl status minecraft.service  # Vérifier l'état
+```
+
+# On peut consulter les logs du serveur via journalctl :
+```
+sudo journalctl -u minecraft.service -f
+```
 
 
+
+# Effectuer une backup du server toutes les 24h 
+```
+lou@client3:~/forge-server$ nano backup_server.sh 
+
+#!/bin/bash
+
+BACKUP_DIR="/home/lou/backups"   # Répertoire où les sauvegardes seront stockées
+SERVER_DIR="/home/lou/forge-server"  # Répertoire du serveur Minecraft
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")  # Utilisation de la date pour un nom unique de sauvegarde
+
+# Créer le répertoire de sauvegarde si nécessaire
+mkdir -p "$BACKUP_DIR"
+
+# Supprimer la sauvegarde précédente s'il y en a une
+if [ -f "$BACKUP_DIR/backup.tar.gz" ]; then
+    echo "Suppression de la sauvegarde précédente..."
+    rm "$BACKUP_DIR/backup.tar.gz"
+else
+    echo "Aucune sauvegarde précédente trouvée. Création d'une nouvelle sauvegarde."
+fi
+
+# Créer une nouvelle sauvegarde
+echo "Création de la nouvelle sauvegarde..."
+tar -czf "$BACKUP_DIR/backup_$DATE.tar.gz" -C "$SERVER_DIR" .
+
+# Vérification de l'exécution correcte de la commande tar
+if [ $? -eq 0 ]; then
+    echo "La sauvegarde a bien été effectuée avec succès !"
+    echo "Sauvegarde terminée à $(date)" >> "$BACKUP_DIR/sauvegarde.log"  # Ajouter l'heure de la sauvegarde dans un fi>
+else
+    echo "Erreur lors de la création de la sauvegarde."
+fi
+```
+
+# On rend le script exécutable 
+```
+chmod +x /home/lou/forge-server/backup.sh
+```
+
+# On automatise les backups avec cron
+```
+crontab -e
+
+0 3 * * * /chemin/vers/ton/script.sh
+```
+
+# Pour tester le script
+```
+/home/lou/forge-server/backup.sh
+```
