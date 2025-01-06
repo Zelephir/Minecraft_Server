@@ -176,3 +176,72 @@ crontab -e
 ```
 /home/lou/forge-server/backup.sh
 ```
+
+# Créer un fichier qui enregistre les personnes qui se sont connectées au serveur
+# Créer le script
+```
+lou@client3:~$ nano connexions_joueurs.sh
+
+
+#!/bin/bash
+
+# Chemin vers le fichier de logs du serveur Minecraft
+LOG_FILE="/home/lou/forge-server/logs/latest.log"
+
+# Fichier où on stockera les connexions des joueurs
+CONNECTION_LOG="/home/lou/connexions_joueurs.log"
+
+# Vérifier si le fichier de logs existe
+if [ ! -f "$LOG_FILE" ]; then
+    echo "Fichier de log introuvable : $LOG_FILE"
+    exit 1
+fi
+
+# Suivre les logs en direct et capturer les connexions
+tail -Fn0 "$LOG_FILE" | while read LINE; do
+    # Si une ligne contient "joined the game", on l'ajoute au fichier
+    if echo "$LINE" | grep -q "joined the game"; then
+        echo "$LINE" >> "$CONNECTION_LOG"
+    fi
+done
+
+```
+
+# Rendre exécutable le script
+```
+lou@client3:~$ chmod +x /home/lou/connexions_joueurs.sh
+```
+
+# Tester le script 
+```
+lou@client3:~$ ./connexions_joueurs.sh
+```
+
+# Automatiser le script lorsque le server se lance
+# Intègrer l’exécution du script dans le service minecraft.service de systemd
+```
+lou@client3:~$ sudo nano /etc/systemd/system/minecraft.service
+[sudo] password for lou: 
+
+
+[Unit]
+Description=Minecraft Server
+After=network.target
+
+[Service]
+User=lou
+Group=lou
+WorkingDirectory=/home/lou/forge-server
+ExecStart=/bin/bash /home/lou/forge-server/run.sh
+ExecStartPost=/home/lou/connexions_joueurs.sh
+Restart=on-failure
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target
+```
+# Recharger systemd et redémarre le service Minecraft
+```
+lou@client3:~$ sudo systemctl daemon-reload
+lou@client3:~$ sudo systemctl restart minecraft.service
+```
